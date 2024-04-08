@@ -1,44 +1,25 @@
-#!/usr/bin/python3
-import sys
-import time
+#!/usr/bin/env bash
 
-def factorize_number(n):
-    """
-    Factorizes a given number into a product of two smaller numbers.
-    Returns the factors if found, None otherwise.
-    """
-    for i in range(2, n // 2 + 1):
-        if n % i == 0:
-            return i, n // i
-    return None
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 filename"
+    echo "provided a valid file as an argument."
+    exit 1
+fi
 
-def factorize_file(filename):
-    """
-    Factorizes numbers from a given file.
-    Prints the factorization for each number found.
-    """
-    with open(filename, 'r') as file:
-        for line in file:
-            number = int(line.strip())
-            factors = factorize_number(number)
-            if factors is not None:
-                p, q = factors
-                print(f"{number}={p}*{q}")
+file="$1"
 
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: factors <file>")
-    else:
-        file_path = sys.argv[1]
+if [[ ! -f "$file" ]]; then
+    echo "Error: File '$file' not found."
+    exit 1
+fi
 
-        start_time = time.time()
-
-        # Print the factorization results
-        factorize_file(file_path)
-
-        elapsed_time = time.time() - start_time
-
-        # Print the time output
-        print(f"\nreal\t{elapsed_time:.3f}s")
-        print(f"user\t{elapsed_time:.3f}s")
-        print(f"sys\t{elapsed_time:.3f}s")
+while IFS= read -r num; do
+    read -ra factors <<< "$(factor "$num")"
+    m_factor=${factors[1]}
+    if [[ -n "$m_factor" ]]; then
+        quotient=$((num / m_factor))
+        echo "${num}=${quotient}*${m_factor}"
+    else
+        echo "Error: Fails factor $num"
+    fi
+done < "$file"
