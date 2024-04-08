@@ -1,25 +1,50 @@
 #!/usr/bin/env bash
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 filename"
-    echo "provided a valid file as an argument."
-    exit 1
-fi
+#count=1
+#while [[ $count -le $# ]]; do
+#    echo "Argument $count: ${!count}"
+#    count=$((count + 1))
+#done
 
-file="$1"
-
-if [[ ! -f "$file" ]]; then
-    echo "Error: File '$file' not found."
-    exit 1
-fi
-
-while IFS= read -r num; do
-    read -ra factors <<< "$(factor "$num")"
-    m_factor=${factors[1]}
-    if [[ -n "$m_factor" ]]; then
-        quotient=$((num / m_factor))
-        echo "${num}=${quotient}*${m_factor}"
+factor_finder(){
+    if [ $# -ne 3 ]
+    then
+        argv="#@"
+        count=0
+        num2=1
+        for arg in ${argv[*]};
+        do
+            if [ $count -gt 1 ]
+            then
+                num2=$(echo $num2 * $arg | bc)
+            fi
+            count=$((count + 1))
+        done
     else
-        echo "Error: Fails factor $num"
+        num2=$3
     fi
-done < "$file"
+
+    num1=$2
+    num=$(echo "$1" | tr ';' '=')
+
+    result=$(echo "if($num1 > $num2) 1 else 0" | bc)
+        if [ $result -eq 1 ]
+        then
+            numcp=$num1
+            num1=$num2
+            num2=$numcp
+        fi
+    echo "$num$num1*$num2"
+}
+
+if [ $# -ne 1 ]
+then
+    echo "Usage: $0 <number>"
+    exit 1
+fi  
+while read i
+do
+    input=$(factor "$i")
+    factor_finder $input
+    #echo "$input"
+done < "$1"
